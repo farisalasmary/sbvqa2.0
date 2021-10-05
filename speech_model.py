@@ -21,7 +21,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 import torchvision.models as models
-
+import torchaudio
+#import torchaudio.transforms
 
 class L2Norm(nn.Module):
     def __init__(self, dim):
@@ -33,7 +34,7 @@ class L2Norm(nn.Module):
 
 
 class SpeechEncoder(nn.Module):
-    def __init__(self, common_embedding_size=512, speech_precalculated_features_path=None):
+    def __init__(self, common_embedding_size=512, speech_precalculated_features_path=None, device='cpu'):
         super(SpeechEncoder, self).__init__()
         
         speech_precalculated_features_path = speech_precalculated_features_path # TODO: implement precalculated speech features
@@ -117,12 +118,14 @@ class SpeechEncoder(nn.Module):
 ################################################################################################################
 
 class ImageEncoder(nn.Module):
-    def __init__(self, common_embedding_size=512, is_freeze=True, precalculated_features_path=None):
+    def __init__(self, common_embedding_size=512, is_freeze=True, precalculated_features_path=None, device='cpu'):
         super(ImageEncoder, self).__init__()
         self.feature_extractor = models.vgg19(pretrained=True)
         layers_list = list(self.feature_extractor.classifier.modules())[1:6]
         self.feature_extractor.classifier = nn.Sequential(*layers_list)
         last_layer_output_size = list(self.feature_extractor.classifier.named_parameters())[-1][1].shape[0]
+        
+        self.device = device
         
         self.l2_norm = L2Norm(1)
         self.linear = nn.Linear(last_layer_output_size, common_embedding_size)
@@ -153,7 +156,7 @@ class ImageEncoder(nn.Module):
             images_features.append(self.precalculated_features[image_id].cpu().numpy())
         
         
-        images_features = torch.tensor(images_features, requires_grad=False)
+        images_features = torch.tensor(images_features, requires_grad=False).to(self.device)
         
         return images_features
     
@@ -195,14 +198,17 @@ class ImageEncoder(nn.Module):
 ################################################################################################################
 
 
-class SpeechMod(nn.Module):
-    def __init__(self, output_size, common_embedding_size=512, images_precalculated_features_path=None, speech_precalculated_features_path=None):
-        super(SpeechMod, self).__init__()
+class SpeechVQA(nn.Module):
+    def __init__(self, output_size, common_embedding_size=512, images_precalculated_features_path=None, speech_precalculated_features_path=None, device='cpu'):
+        super(SpeechVQA, self).__init__()
+        
+        self.device = device
         
         self.images_precalculated_features_path = images_precalculated_features_path
         self.speech_precalculated_features_path = speech_precalculated_features_path
-        self.image_encoder = ImageEncoder(common_embedding_size, precalculated_features_path=images_precalculated_features_path)
-        self.speech_encoder = SpeechEncoder(common_embedding_size, speech_precalculated_features_path=speech_precalculated_features_path)
+        self.device = device
+        self.image_encoder = ImageEncoder(common_embedding_size, precalculated_features_path=images_precalculated_features_path, device=device).to(self.device)
+        self.speech_encoder = SpeechEncoder(common_embedding_size, speech_precalculated_features_path=speech_precalculated_features_path, device=device).to(self.device)
         self.l2_norm = L2Norm(1)
         self.linear1 = nn.Linear(common_embedding_size, common_embedding_size)
         self.activation = nn.Tanh()
@@ -215,8 +221,8 @@ class SpeechMod(nn.Module):
     
     
     def forward(self, speech_signals, images, inference_mode=False):
-        image_features = self.image_encoder(images)
-        speech_features = self.speech_encoder(speech_signals)
+        image_features = self.image_encoder(images).to(self.device)
+        speech_features = self.speech_encoder(speech_signals).to(self.device)
         
         joint_features = self._join_features(speech_features, image_features)
         normlaized_features = self.l2_norm(joint_features)
@@ -262,32 +268,52 @@ class SpeechMod(nn.Module):
 
             image = transform(image).cpu().numpy()
             images.append(image)
-        return torch.tensor(images).float()
+        return torch.tensor(images).float().to(self.device)
     
+    def load_audio_faster(self, audio_path, resample_rate=16000):
+        signal, sample_rate = torchaudio.load(audio_path)
+        resampler = torchaudio.transforms.Resample(sample_rate, resample_rate)
+        resampled_signal = resampler(signal)
+        
+        return resampled_signal
     
     def read_audios(self, audios_paths):
         if type(audios_paths) != list:
             raise ValueError('You MUST provide a list of paths of audio files....')
         
+        max_signal_len = -1
         audios_signals = []
         for audio_path in audios_paths:
-            audio_signal, sr = librosa.load(audio_path, sr=16_000)
-            audio_signal = audio_signal.reshape(1, -1)
+            #audio_signal, sr = librosa.load(audio_path, sr=16_000)
+            #audio_signal = audio_signal.reshape(1, -1)
+            audio_signal = self.load_audio_faster(audio_path, resample_rate=16000).cpu().numpy()
             
             audios_signals.append(audio_signal)
-            
-        return torch.tensor(audios_signals)
-
-
-
+            max_signal_len = max(max_signal_len, audio_signal.shape[1])
         
+        tmp = []
+        for audio_signal in audios_signals:
+            len_diff = max_signal_len - audio_signal.shape[1]
+            if len_diff > 0:
+                audio_signal = np.concatenate([audio_signal, np.zeros(len_diff).reshape(1, -1)], axis=1)
+            
+            tmp.append(audio_signal)
+        
+        audios_signals = tmp
+        
+        return torch.tensor(audios_signals).float().to(self.device)
+
+
+
+'''
+
 from speech_model import *
 images_precalculated_features_path = '/home/farisalasmary/Desktop/speech_vqa/sbvqa_my_implementation/train2014_named_images_features.pth'
 
 audio_path = '/home/farisalasmary/volume/arabic_kaldi_models/NEOM_30_sec.wav'
 image_path = '/home/farisalasmary/Desktop/speech_vqa/train2014/COCO_train2014_000000487025.jpg'
 
-model = SpeechMod(1000, images_precalculated_features_path=images_precalculated_features_path)
+model = SpeechVQA(1000, images_precalculated_features_path=images_precalculated_features_path)
 
 images_paths = [image_path]*10 # just a single file for simplcity
 audios_paths = [audio_path]*10 # just a single file for simplcity
@@ -296,7 +322,7 @@ speech_signals = model.read_audios(audios_paths)
 out = model(speech_signals, images_ids)
 
 
-
+'''
 
 
 
@@ -305,7 +331,7 @@ if __name__ == '__main__':
 
 from speech_model import *
 images_precalculated_features_path = '/home/farisalasmary/Desktop/speech_vqa/sbvqa_my_implementation/train2014_named_images_features.pth'
-model = SpeechMod(1000, images_precalculated_features_path=images_precalculated_features_path)
+model = SpeechVQA(1000, images_precalculated_features_path=images_precalculated_features_path)
 audio_path = '/home/farisalasmary/volume/arabic_kaldi_models/NEOM_30_sec.wav'
 image_path = '/home/farisalasmary/Desktop/speech_vqa/train2014/COCO_train2014_000000487025.jpg'
 
@@ -321,6 +347,7 @@ images_ids = ['000000022098', '000000312896', '000000544731', '000000024257', '0
 
 #out = model(speech_signals, images)
 out = model(speech_signals, images_ids)
+
 
 
 '''
