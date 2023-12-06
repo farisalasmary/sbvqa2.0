@@ -1,5 +1,0 @@
-results
-epoch 42 (43277, 104524, 0.4140388810225403)
-
-epoch 45 
-Accuracy on validation set: 0.4236443304886916
