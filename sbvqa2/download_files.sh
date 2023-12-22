@@ -1,4 +1,6 @@
 
+unzip data.zip
+
 # download NeMo Conformer Checkpoint (.nemo)
 gdown -c --fuzzy -O pretrained_models/ https://drive.google.com/file/d/1-FD-pLvCSy_TZ7POQap_XzpzsuvDnIBv/view?usp=sharing
 
