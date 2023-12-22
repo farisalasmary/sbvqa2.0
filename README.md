@@ -8,13 +8,50 @@ Coming soon!
 
 ## Data
 ### Audio files
-Coming soon!
+
+**`SBVQA 2.0 dataset = SBVQA 1.0 dataset + The complementary spoken questions`**
+
+- SBVQA 1.0 original data (identical copy of the data from [zted/sbvqa](https://github.com/zted/sbvqa) repo): [Download](https://drive.google.com/file/d/1-DzJbt5jwXGeRnvgTw2gTm4fC8PtLhCR/view)
+- The complementary spoken questions: [Download](https://drive.google.com/file/d/1_YNontdvxKmF92AYW8XxSpLv37rst4OR/view)
+
+Also, you can download `mp3_files_by_question.pkl`, a mapper where the key is the textual question and the value is the `.mp3` file name, from [this link](https://drive.google.com/file/d/1HtVK15wjj2MzQM5ApouZ6Kp-305eGptu/view).
+
+To load the mapper, use the following code snippet:
+```python
+import re
+import pickle
+
+def clean_question(text):
+    text = text.lower()
+    return ' '.join(re.sub(u"[^a-zA-Z ]", "", text,  flags=re.UNICODE).split())
+
+mp3_files_by_question_mapper = pickle.load(open('mp3_files_by_question.pkl', 'rb'))
+
+textual_question = 'Is this a modern interior?'
+mp3_files_by_question_mapper[clean_question(textual_question)]
+# Output: 'complementary_0000010.mp3'
+
+textual_question = 'Where can milk be obtained?'
+mp3_files_by_question_mapper[clean_question(textual_question)]
+# Output: 'complementary_0000011.mp3'
+
+textual_question = 'What are the payment method of the parking meter?'
+mp3_files_by_question_mapper[clean_question(textual_question)]
+# Output: 'complementary_0000012.mp3'
+```
+
 
 ### Image files
-Coming soon!
+These links were taken from the [VQA Website](https://visualqa.org/download.html)
+- train2014 images: [Download](http://images.cocodataset.org/zips/train2014.zip)
+- val2014 images: [Download](http://images.cocodataset.org/zips/val2014.zip)
+- test2015 images: [Download](http://images.cocodataset.org/zips/test2015.zip)
+
 
 ### Precomputed features
-Coming soon!
+- BLIP features (train2014 images): [Download](https://drive.google.com/file/d/1-AR0Krjip2SYaKWY6dQvAhamVo91pUiJ/view?usp=sharing)
+- BLIP features (val2014 images): [Download](https://drive.google.com/file/d/1-Q3dDlRue9dbDV3qwbGDaF6GNLm4rN9U/view?usp=sharing)
+- Speech features of the whole SBVQA 2.0 dataset (Joanna only): [Download](https://drive.google.com/file/d/1Icdcw4rYyTzm4X3osAKNrsTXkyEHuMEq/view?usp=sharing)
 
 ## Pretrained Models
 Coming soon!
@@ -39,13 +76,14 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 
 - [x] speech feature extraction script (NeMo Conformer)
 - [x] noise injection script
+- [ ] inference script
 - [ ] visual feature extraction script (BLIP ViT)
-- [ ] main model training scripts
-- [ ] find the best audio model script
+- [x] main model training scripts
+- [ ] upload find_the_best_speech_encoder.py script
 - [ ] our SBVQA 1.0 implementation scripts
 - [ ] visualization scripts (GradCAM + attention maps)
 - [ ] upload SBVQA 2.0 dataset
-- [ ] upload precomputed visual and speech features
+- [x] upload precomputed visual and speech features
 - [ ] upload our pretrained models
 
 
