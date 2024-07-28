@@ -4,7 +4,14 @@ This is the official implementation of our paper:
 
 
 ## How to run?
-Coming soon!
+1. Install all requirements in `requirements.txt`.
+2. Download models inside the folder `models/`.
+3. Make a new empty folder with the name `uploads/`.
+4. Create an account in [ngrok](https://ngrok.com) to be able to use the model from browser via internet.
+5. Copy your [ngrok authtoken](https://dashboard.ngrok.com/get-started/your-authtoken).
+6. Edit `website.py` script by replacing `YOUR_TOKEN_GOES_HERE` string with your `ngrok authtoken`.
+7. Run the script `python website.py`
+8. Enjoy ;)
 
 ## Data
 ### Audio files
@@ -54,7 +61,8 @@ These links were taken from the [VQA Website](https://visualqa.org/download.html
 - Speech features of the whole SBVQA 2.0 dataset (Joanna only): [Download](https://drive.google.com/file/d/1Icdcw4rYyTzm4X3osAKNrsTXkyEHuMEq/view?usp=sharing)
 
 ## Pretrained Models
-Coming soon!
+1. NeMo speech encoder checkpoint: [stt_en_conformer_ctc_large_24500_hours_bpe.nemo](https://drive.google.com/file/d/13mX_X3aS4MI_JX1UtYU0mIxXjaJFAzdZ/view)
+2. Best SBVQA 2.0 checkpoint: [best_sbvqa_2.0_model.pt](https://drive.google.com/file/d/13j7T8dpKcjD499e6DGm4RL4UYjl1Kvvu/view)
 
 
 ## Authors
