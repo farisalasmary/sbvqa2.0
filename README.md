@@ -1,3 +1,4 @@
+<a href="https://colab.research.google.com/drive/1BKg2TXvuXA40JDersqyQDE6hIyrgWQ3z?usp=sharing" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 # SBVQA 2.0 Official Implementation
 This is the official implementation of our paper:
 > [SBVQA 2.0: Robust End-to-End Speech-Based Visual Question Answering for Open-Ended Questions](https://ieeexplore.ieee.org/document/10343139)
