@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBVQA 2.0 Model Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #result, #preview {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+        }
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            display: none;
+        }
+        #audioPlayer {
+            display: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>SBVQA 2.0 Model Demo</h1>
+    
+    <input type="file" id="imageUpload" accept="image/*">
+    <br><br>
+    <button id="startRecording">Start Recording</button>
+    <button id="stopRecording" disabled>Stop Recording</button>
+    <br><br>
+    <button id="submitData">Submit Data</button>
+    
+    <div id="preview">
+        <h2>Preview:</h2>
+        <img id="imagePreview" alt="Uploaded Image">
+        <br><br>
+        <audio id="audioPlayer" controls></audio>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        let audioBlob;
+        let mediaRecorder;
+        let imageFile;
+
+        document.getElementById('imageUpload').addEventListener('change', (event) => {
+            imageFile = event.target.files[0];
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.src = URL.createObjectURL(imageFile);
+            imagePreview.style.display = 'block';
+        });
+
+        document.getElementById('startRecording').addEventListener('click', startRecording);
+        document.getElementById('stopRecording').addEventListener('click', stopRecording);
+        document.getElementById('submitData').addEventListener('click', submitData);
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            const chunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                chunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                audioBlob = new Blob(chunks, { type: 'audio/wav' });
+                const audioURL = URL.createObjectURL(audioBlob);
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = audioURL;
+                audioPlayer.style.display = 'block';
+            };
+
+            mediaRecorder.start();
+            document.getElementById('startRecording').disabled = true;
+            document.getElementById('stopRecording').disabled = false;
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.getElementById('startRecording').disabled = false;
+            document.getElementById('stopRecording').disabled = true;
+        }
+
+        async function submitData() {
+            if (!imageFile || !audioBlob) {
+                alert('Please upload an image and record audio before submitting.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            formData.append('audio', audioBlob);
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <p><strong>Answer:</strong> ${result.answer}</p>
+                    <img src="${result.gradcam_image_url}" alt="Error In Image1">
+                    <img src="${result.all_heads_image_url}" style="max-width: 800px" alt="Error In Image2">
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').textContent = 'An error occurred. Please try again.';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -76,15 +76,15 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 
 - [x] speech feature extraction script (NeMo Conformer)
 - [x] noise injection script
-- [ ] inference script
+- [x] inference script
 - [ ] visual feature extraction script (BLIP ViT)
 - [x] main model training scripts
 - [ ] upload find_the_best_speech_encoder.py script
 - [ ] our SBVQA 1.0 implementation scripts
-- [ ] visualization scripts (GradCAM + attention maps)
-- [ ] upload SBVQA 2.0 dataset
+- [x] visualization scripts (GradCAM + attention maps)
+- [x] upload SBVQA 2.0 dataset
 - [x] upload precomputed visual and speech features
-- [ ] upload our pretrained models
+- [x] upload our pretrained models
 
 
 ## Citation
