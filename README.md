@@ -4,6 +4,7 @@ This is the official implementation of our paper:
 
 
 ## How to run?
+### Steps
 1. Install all requirements in `requirements.txt`.
 2. Download models inside the folder `models/`.
 3. Make a new empty folder with the name `uploads/`.
@@ -12,6 +13,14 @@ This is the official implementation of our paper:
 6. Edit `website.py` script by replacing `YOUR_TOKEN_GOES_HERE` string with your `ngrok authtoken`.
 7. Run the script `python website.py`
 8. Enjoy ;)
+
+### Demo Examples
+The recorded question was: "What kind of animals is this?"
+![](images/cat_sample_sbvqa2.0.gif)
+
+
+The recorded question was: "What is the color of the topping of the cake?"
+![](images/cake_sample_sbvqa2.0.gif)
 
 ## Data
 ### Audio files
