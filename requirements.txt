@@ -3,7 +3,8 @@ Cython
 audiomentations==0.28.0
 nemo_toolkit
 git+https://github.com/farisalasmary/pydub.git@master
-transformers==4.16.0
+#transformers==4.16.0 # this is commented out to shut the annoying security notifications by Github :)
+transformers
 timm==0.4.12
 fairscale==0.4.4
 flask_cors
